@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Clever Poster</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f9fafb;
+      color: #374151;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    header {
+      background: #0284c7;
+      padding: 20px 0;
+    }
+
+    header .inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    header svg { flex-shrink: 0; }
+
+    header h1 {
+      color: white;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      color: rgba(255,255,255,0.75);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    main {
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 0 24px 60px;
+    }
+
+    .meta {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 36px;
+    }
+
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+      margin: 32px 0 8px;
+    }
+
+    p { margin-bottom: 12px; }
+
+    ul {
+      list-style: disc;
+      padding-left: 22px;
+      margin-bottom: 12px;
+    }
+
+    ul li { margin-bottom: 8px; }
+
+    strong { color: #111827; }
+
+    code {
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 13px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+      padding: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    footer a { color: #0284c7; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <svg width="40" height="40" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1024" height="1024" rx="216" fill="rgba(255,255,255,0.2)"/>
+      <path d="M 336 296 L 336 728 L 744 512 Z" fill="white"/>
+      <g transform="translate(780,216)" fill="white">
+        <path d="M0-44 L10-10 L44 0 L10 10 L0 44 L-10 10 L-44 0 L-10-10 Z"/>
+      </g>
+      <g transform="translate(696,144)" fill="white" opacity="0.75">
+        <path d="M0-26 L6-6 L26 0 L6 6 L0 26 L-6 6 L-26 0 L-6-6 Z"/>
+      </g>
+      <circle cx="820" cy="124" r="16" fill="white" opacity="0.55"/>
+    </svg>
+    <div>
+      <h1>Clever Poster</h1>
+      <p>Privacy Policy</p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <p class="meta">Last updated: March 2026</p>
+
+  <h2>1. Overview</h2>
+  <p>
+    Clever Poster is a self-hosted application. All data is stored locally on the
+    machine running the Application. We do not operate any external servers, analytics
+    services, or data collection infrastructure.
+  </p>
+
+  <h2>2. Data We Store Locally</h2>
+  <ul>
+    <li>
+      <strong>Google OAuth tokens</strong> — stored encrypted in the local PostgreSQL
+      database using AES-128 (Fernet symmetric encryption). Used solely to read video
+      files from your connected Google Drive.
+    </li>
+    <li>
+      <strong>TikTok OAuth tokens</strong> — stored encrypted in the local database.
+      Used solely to publish videos to the TikTok accounts you have connected.
+    </li>
+    <li>
+      <strong>Video metadata</strong> — filenames, file sizes, AI-generated descriptions,
+      hashtags, and product links are stored locally to support the review and posting
+      workflow. No video file content is stored permanently; videos are streamed directly
+      from Google Drive.
+    </li>
+    <li>
+      <strong>Application settings</strong> — preferences such as your selected AI model,
+      timezone, and folder mappings are stored locally.
+    </li>
+  </ul>
+
+  <h2>3. Data Shared with Third Parties</h2>
+  <ul>
+    <li>
+      <strong>Google</strong> — OAuth authentication requests are sent to Google's servers.
+      The Application requests <em>read-only</em> access to your Drive and does not
+      transmit Drive content to any party other than TikTok during a post.
+    </li>
+    <li>
+      <strong>TikTok</strong> — when you post a video, the video file and caption
+      (description, hashtags, product links) are uploaded to TikTok via their Content
+      Posting API. This transmission is initiated explicitly by you.
+    </li>
+    <li>
+      <strong>Ollama (local AI)</strong> — video frames are passed to the Ollama process
+      running on your local machine. No data is sent to any external AI service or
+      third party.
+    </li>
+  </ul>
+  <p>
+    We do not sell, rent, or share your data with any advertisers or analytics providers.
+  </p>
+
+  <h2>4. Data Retention &amp; Deletion</h2>
+  <p>
+    All data is stored in the local database managed by you. You can delete all stored
+    data at any time by stopping the Application and removing the Docker volume
+    (<code>docker compose down -v</code>). Revoking Google or TikTok OAuth access from
+    within those platforms' account settings will also invalidate stored tokens.
+  </p>
+
+  <h2>5. Security</h2>
+  <p>
+    OAuth tokens are encrypted at rest using Fernet symmetric encryption. The encryption
+    key is stored in your local <code>.env</code> file and is never transmitted. The
+    Application is only accessible on your local network and is served over HTTPS using
+    a locally-trusted certificate.
+  </p>
+
+  <h2>6. Changes to This Policy</h2>
+  <p>
+    This policy may be updated at any time. The "last updated" date at the top of this
+    page reflects the most recent revision.
+  </p>
+</main>
+
+<footer>
+  <p>
+    &copy; 2026 Clever Poster &nbsp;&middot;&nbsp;
+    <a href="terms.html">Terms of Service</a>
+  </p>
+</footer>
+
+</body>
+</html>
