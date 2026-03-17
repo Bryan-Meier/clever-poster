@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clever Poster — Authenticating...</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --white: #f5f4f0;
+      --accent: #ff2d55;
+      --accent2: #00d4ff;
+      --muted: #888;
+      --card-bg: #111;
+      --border: rgba(255,255,255,0.08);
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+    }
+
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.1;
+      pointer-events: none;
+    }
+    .blob-1 { width: 500px; height: 500px; background: var(--accent); top: -150px; right: -150px; }
+    .blob-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; left: -100px; }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3rem;
+      width: 100%;
+      max-width: 560px;
+      text-align: center;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 2.5rem;
+      color: var(--white);
+    }
+    .logo span { color: var(--accent); }
+
+    .status-icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 1.5rem;
+    }
+
+    .status-icon.success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); }
+    .status-icon.error   { background: rgba(255,45,85,0.1);  border: 1px solid rgba(255,45,85,0.3); }
+    .status-icon.waiting { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
+
+    /* Code box */
+    .code-section { text-align: left; margin-top: 2rem; }
+
+    .code-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .code-box {
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .code-value {
+      font-size: 0.8rem;
+      color: var(--accent2);
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .code-value.muted-val { color: var(--muted); font-style: italic; }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+    .copy-btn.copied { border-color: var(--success); color: var(--success); }
+
+    /* Instructions */
+    .instructions {
+      background: rgba(255,45,85,0.05);
+      border: 1px solid rgba(255,45,85,0.15);
+      border-radius: 8px;
+      padding: 1.25rem;
+      text-align: left;
+      margin-top: 1.5rem;
+    }
+
+    .instructions-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .instructions ol {
+      padding-left: 1.2rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 2;
+    }
+
+    .instructions ol li { padding-left: 0.25rem; }
+    .instructions code {
+      color: var(--accent2);
+      background: rgba(0,212,255,0.08);
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.78rem;
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2rem 0;
+    }
+
+    /* Raw params toggle */
+    .raw-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 1rem;
+      display: block;
+      text-align: center;
+      width: 100%;
+    }
+    .raw-toggle:hover { color: var(--white); }
+
+    .raw-box {
+      display: none;
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      word-break: break-all;
+      text-align: left;
+      line-height: 1.8;
+    }
+    .raw-box.visible { display: block; }
+
+    .home-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+    .home-link:hover { color: var(--white); }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="card">
+    <div class="logo">Clever<span>Poster</span></div>
+
+    <div id="app">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <a href="index.html" class="home-link">← Back to home</a>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code  = params.get('code');
+    const state = params.get('state');
+    const error = params.get('error');
+    const errorDesc = params.get('error_description');
+    const app = document.getElementById('app');
+
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    function toggleRaw(btn, box) {
+      box.classList.toggle('visible');
+      btn.textContent = box.classList.contains('visible')
+        ? '▲ Hide raw parameters'
+        : '▼ Show raw parameters';
+    }
+
+    if (error) {
+      // ── ERROR STATE ──
+      app.innerHTML = `
+        <div class="status-icon error">✕</div>
+        <h1>Authorization Failed</h1>
+        <p class="subtitle">
+          TikTok returned an error during the login flow.<br/>
+          <strong style="color:var(--accent)">${error}</strong>${errorDesc ? ': ' + errorDesc : ''}
+        </p>
+        <div class="instructions">
+          <p class="instructions-title">What to do</p>
+          <ol>
+            <li>Close this tab and try the login flow again</li>
+            <li>Make sure you approved the app permissions on TikTok</li>
+            <li>Check that your <code>client_key</code> and scopes are correct</li>
+          </ol>
+        </div>
+      `;
+
+    } else if (code) {
+      // ── SUCCESS STATE ──
+      const allParams = Array.from(params.entries())
+        .map(([k, v]) => `${k} = ${v}`)
+        .join('\n');
+
+      app.innerHTML = `
+        <div class="status-icon success">✓</div>
+        <h1>Authorization Successful</h1>
+        <p class="subtitle">
+          TikTok has authorized your app. Copy the code below and paste it into your local app to exchange it for an access token.
+        </p>
+
+        <div class="code-section">
+          <p class="code-label">Authorization Code</p>
+          <div class="code-box">
+            <span class="code-value" id="code-val">${code}</span>
+            <button class="copy-btn" onclick="copyToClipboard('${code}', this)">Copy</button>
+          </div>
+
+          ${state ? `
+          <p class="code-label">State</p>
+          <div class="code-box">
+            <span class="code-value" id="state-val">${state}</span>
+            <button class="copy-btn" onclick="copyToClipboard('${state}', this)">Copy</button>
+          </div>` : ''}
+        </div>
+
+        <div class="instructions">
+          <p class="instructions-title">Next step</p>
+          <ol>
+            <li>Copy the authorization code above</li>
+            <li>In your local app, exchange it for an access token by calling <code>/oauth/token</code></li>
+            <li>Store the returned <code>access_token</code> securely — you'll use it for all API calls</li>
+            <li>Note: codes expire quickly, so do this straight away</li>
+          </ol>
+        </div>
+
+        <button class="raw-toggle" onclick="toggleRaw(this, document.getElementById('raw-box'))">▼ Show raw parameters</button>
+        <div class="raw-box" id="raw-box"><pre>${allParams}</pre></div>
+      `;
+
+    } else {
+      // ── NO PARAMS STATE ──
+      app.innerHTML = `
+        <div class="status-icon waiting">?</div>
+        <h1>Waiting for TikTok</h1>
+        <p class="subtitle">
+          This page is your OAuth callback URL. TikTok will redirect here after a user authorizes your app.<br/><br/>
+          If you landed here directly, no authorization has happened yet.
+        </p>
+        <div class="instructions">
+          <p class="instructions-title">How this works</p>
+          <ol>
+            <li>Your app redirects the user to TikTok's login page</li>
+            <li>The user approves your app's permissions</li>
+            <li>TikTok redirects back to this page with an authorization code</li>
+            <li>You copy the code and exchange it for an access token</li>
+          </ol>
+        </div>
+      `;
+    }
+  </script>
+
+</body>
+</html>
