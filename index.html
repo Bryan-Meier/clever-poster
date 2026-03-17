@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clever Poster — TikTok Content Scheduler</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --white: #f5f4f0;
+      --accent: #ff2d55;
+      --accent2: #00d4ff;
+      --muted: #888;
+      --card-bg: #111;
+      --border: rgba(255,255,255,0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* ── GLOW BLOBS ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; right: -200px; animation: drift 18s ease-in-out infinite alternate; }
+    .blob-2 { width: 500px; height: 500px; background: var(--accent2); bottom: -100px; left: -150px; animation: drift 22s ease-in-out infinite alternate-reverse; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.08); }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 3rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.7);
+      backdrop-filter: blur(20px);
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.03em;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--accent); }
+
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 0.35rem 1rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .hero-badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      max-width: 900px;
+      animation: fadeUp 0.8s 0.1s ease both;
+    }
+
+    h1 .accent { color: var(--accent); }
+    h1 .accent2 { color: var(--accent2); }
+
+    .hero-sub {
+      max-width: 520px;
+      color: var(--muted);
+      margin: 2rem auto 0;
+      font-size: 0.95rem;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    .hero-cta {
+      margin-top: 3rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 2rem;
+      border-radius: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #e0002a; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,45,85,0.35); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--white);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
+
+    /* ── TICKER ── */
+    .ticker-wrap {
+      width: 100%;
+      overflow: hidden;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0;
+      margin: 2rem 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .ticker {
+      display: flex;
+      gap: 3rem;
+      white-space: nowrap;
+      animation: ticker 20s linear infinite;
+      width: max-content;
+    }
+
+    .ticker span {
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .ticker span em {
+      color: var(--accent);
+      font-style: normal;
+    }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── FEATURES ── */
+    .section {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      max-width: 600px;
+      margin-bottom: 4rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      padding: 2.5rem;
+      transition: background 0.3s;
+    }
+
+    .feature-card:hover { background: #161616; }
+
+    .feature-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+      background: rgba(255,45,85,0.1);
+    }
+
+    .feature-icon.blue { background: rgba(0,212,255,0.1); }
+
+    .feature-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .feature-card p { color: var(--muted); font-size: 0.88rem; line-height: 1.8; }
+
+    /* ── HOW IT WORKS ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      counter-reset: steps;
+    }
+
+    .step {
+      counter-increment: steps;
+      position: relative;
+      padding-top: 1rem;
+    }
+
+    .step::before {
+      content: "0" counter(steps);
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 3.5rem;
+      color: rgba(255,255,255,0.04);
+      line-height: 1;
+      display: block;
+      margin-bottom: -1.5rem;
+    }
+
+    .step h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      color: var(--white);
+    }
+
+    .step p { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── TECH STACK ── */
+    .stack-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+
+    .stack-pill {
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 0.4rem 1.1rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+
+    .stack-pill:hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--card-bg);
+      padding: 1rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      padding: 3rem;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    footer p { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.05em; }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .status-bar { padding: 1rem 1.5rem; }
+      footer { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">Clever<span>Poster</span></a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Personal TikTok Management Tool
+    </div>
+
+    <h1>
+      Schedule.<br/>
+      <span class="accent">Post.</span>
+      <span class="accent2">Repeat.</span>
+    </h1>
+
+    <p class="hero-sub">
+      Clever Poster is a personal content scheduling tool for managing and publishing TikTok videos — directly from your local machine, on your own schedule.
+    </p>
+
+    <div class="hero-cta">
+      <a href="https://github.com/Bryan-Meier/clever-poster" class="btn btn-primary">
+        ↗ View on GitHub
+      </a>
+      <a href="terms.html" class="btn btn-secondary">
+        Read Terms
+      </a>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <span>Schedule Videos&nbsp;<em>✦</em></span>
+      <span>Direct Post API&nbsp;<em>✦</em></span>
+      <span>Multi-Account Support&nbsp;<em>✦</em></span>
+      <span>Local-First&nbsp;<em>✦</em></span>
+      <span>Privacy Focused&nbsp;<em>✦</em></span>
+      <span>OAuth 2.0&nbsp;<em>✦</em></span>
+      <span>TikTok API v2&nbsp;<em>✦</em></span>
+      <span>Schedule Videos&nbsp;<em>✦</em></span>
+      <span>Direct Post API&nbsp;<em>✦</em></span>
+      <span>Multi-Account Support&nbsp;<em>✦</em></span>
+      <span>Local-First&nbsp;<em>✦</em></span>
+      <span>Privacy Focused&nbsp;<em>✦</em></span>
+      <span>OAuth 2.0&nbsp;<em>✦</em></span>
+      <span>TikTok API v2&nbsp;<em>✦</em></span>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <p class="section-label reveal">What it does</p>
+    <h2 class="section-title reveal">Built for creators who prefer control.</h2>
+
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon">🎬</div>
+        <h3>Video Scheduling</h3>
+        <p>Queue up videos to post at precise times. Plan your entire content calendar without being glued to your phone.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon blue">⚡</div>
+        <h3>Direct Post API</h3>
+        <p>Uses TikTok's official Content Posting API to publish directly to your profile — no third-party middlemen.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">🔐</div>
+        <h3>Secure OAuth Login</h3>
+        <p>Authenticates via TikTok's official OAuth 2.0 flow. Your credentials never leave your machine.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon blue">🖥️</div>
+        <h3>Local-First</h3>
+        <p>Runs entirely from your local machine. No cloud subscriptions, no data sharing, no monthly fees.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">👤</div>
+        <h3>Multi-Account</h3>
+        <p>Manage multiple TikTok accounts from a single interface. Switch between creators with ease.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon blue">📋</div>
+        <h3>Draft Support</h3>
+        <p>Upload videos as drafts for review before they go live, or push them directly to your audience.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <p class="section-label reveal">Process</p>
+    <h2 class="section-title reveal">Simple by design.</h2>
+
+    <div class="steps">
+      <div class="step reveal">
+        <h3>Connect Your Account</h3>
+        <p>Authenticate with TikTok via OAuth. Grant the app permission to post on your behalf.</p>
+      </div>
+      <div class="step reveal">
+        <h3>Upload Your Video</h3>
+        <p>Select your video file, write your caption, configure privacy and engagement settings.</p>
+      </div>
+      <div class="step reveal">
+        <h3>Set Your Schedule</h3>
+        <p>Choose exactly when you want the post to go live, or publish it immediately.</p>
+      </div>
+      <div class="step reveal">
+        <h3>Done</h3>
+        <p>Clever Poster handles the upload and publishes at the right moment. No manual steps.</p>
+      </div>
+    </div>
+
+    <div style="margin-top: 5rem;">
+      <p class="section-label reveal">Built with</p>
+      <div class="stack-row">
+        <span class="stack-pill">TikTok API v2</span>
+        <span class="stack-pill">OAuth 2.0</span>
+        <span class="stack-pill">Content Posting API</span>
+        <span class="stack-pill">Login Kit</span>
+        <span class="stack-pill">Node.js</span>
+        <span class="stack-pill">localhost</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-item">
+      <span class="status-dot"></span>
+      Personal use tool — not a commercial product
+    </div>
+    <div class="status-item">
+      TikTok API Sandbox &nbsp;·&nbsp; Individual Developer
+    </div>
+    <div class="status-item">
+      <a href="privacy.html" style="color: var(--muted); text-decoration:none;">Privacy Policy</a>
+      &nbsp;·&nbsp;
+      <a href="terms.html" style="color: var(--muted); text-decoration:none;">Terms of Service</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>
+      © 2025 Clever Poster &nbsp;·&nbsp;
+      Built by <a href="https://github.com/Bryan-Meier">Bryan Meier</a> &nbsp;·&nbsp;
+      <a href="https://github.com/Bryan-Meier/clever-poster">GitHub</a> &nbsp;·&nbsp;
+      <a href="privacy.html">Privacy</a> &nbsp;·&nbsp;
+      <a href="terms.html">Terms</a>
+    </p>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 80);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
